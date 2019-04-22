@@ -127,8 +127,15 @@ def fill(color=(0,0,0)):
     
     gameDisplay.fill(color)
 
+def rot_center(image, angle):
+    """rotate a Surface, maintaining position."""
 
-def show_image(image_name=False, image=False, size_x=0, size_y=0, x=100, y=100, multipler=0, mirror=False):
+    loc = image.get_rect().center  #rot_image is not defined 
+    rot_sprite = pygame.transform.rotate(image, angle)
+    rot_sprite.get_rect().center = loc
+    return rot_sprite
+
+def show_image(image_name=False, image=False, size_x=0, size_y=0, x=100, y=100, multipler=0, mirrorx=False, mirrory=False):
     """
     import and show image that is in your directory
     """
@@ -156,8 +163,9 @@ def show_image(image_name=False, image=False, size_x=0, size_y=0, x=100, y=100, 
         
         image = pygame.transform.scale(image, (size_x, size_y))
     
-    if(mirror):
-        image=pygame.transform.flip(image,True,False) #godmorgon!
+    
+    image=pygame.transform.flip(image,mirrorx,mirrory) #godmorgon!
+    
     
     gameDisplay.blit(image,(x, y))
     #pygame.display.update()
