@@ -47,55 +47,92 @@ class Player:
         self.x=x
         self.y=y
         self.layout = layout
+        self.dirX=0
+        self.dirY=0
         
         players.append(self)
 
-    def Use(self, slot):
+    def hurt(self,slot):
+        if(self.layout[slot] == 0):
+            self.die()
+        else:
+            self.layout[slot] = 0
+
+    def die(self):
+        print("Death")
+        #players.pop(players.index(self))
+
+    def use(self, slot):
         global playerTurn
-        print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
+        global gameDisplay
+        print(gameDisplay)
+        opponent = players[1-playerTurn]
+        #print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
         
-        dirX=0
-        dirY=0
+        self.dirX=0
+        self.dirY=0
         if(slot == 2 or slot == 3 or slot == 4):
-            dirX = 1
+            self.dirX = 1
         if(slot == 6 or slot == 7 or slot == 8):
-            dirX = -1
+            self.dirX = -1
         if(slot == 1 or slot == 2 or slot == 8):
-            dirY = -1
+            self.dirY = -1
         if(slot == 4 or slot == 5 or slot == 6):
-            dirY = 1
-
+            self.dirY = 1
         #DO ACTION
 
-        if(not(dirX==0 and dirY==0)):
+        if(not(self.dirX==0 and self.dirY==0)):
 
             #DO WEAPON ACTION
             
             if (self.layout[slot] == 0):
                 pass
             if (self.layout[slot] == 1):
-                self.x+=dirX
-                self.y+=dirY
-                print("move",dirX,dirY)
-            if (self.layout[slot] == 2):
-                pass
+                newx = self.x + self.dirX
+                newy = self.y + self.dirY
+                if(newy>=0 and newy<18 and newx>=0 and newx<32 and not(newy == players[1-playerTurn].y and newx == players[1-playerTurn].x)):
+                    self.x = newx
+                    self.y = newy
+                    #print("move",dirX,dirY)
+            if (self.layout[slot] == 3):
+                #print("shoot")
+
+                pygame.draw.line(gameDisplay,(255,100,120),[self.x*32+16,self.y*32+16],[self.x*32+self.dirX*32*32+16,self.y*32+self.dirY*32*32+16],2)
+                opponent = players[1-playerTurn]
+                if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
+                    opponent.hurt((slot+4-1)%8+1)
+                    print("Hurt")
+                
 
         else:
 
             #DO CORE ACTION
 
-            if(self.layout[slot] == 0):
-                pass
+            if(self.layout[slot] == 1):
+                self.layout = rotateList(self.layout,1)
+            if(self.layout[slot] == 2):
+                self.layout = rotateList(self.layout,7)
+                
                 
         #END TURN
         
         #time.sleep(2)
         playerTurn=1-playerTurn
         
-            
-player1=Player(5,7,[0,1,0,0,1,0,1,0,1,0])
-player2=Player(1,2,[0,0,1,1,0,1,0,1,0,0])
+def rotateList(l,iterations):
+    for i in range(iterations):
+        temporaryCore=l.pop(0)
+        l=[temporaryCore]+[l[j-1] for j in range(len(l))]
+    return l
+
+
+
+
+
+
+player1=Player(5,7,[3,3,3,3,3,3,3,3,3])
+player2=Player(1,2,[1,1,1,1,1,1,1,1,1])
 
 
 global gameDisplay
@@ -105,23 +142,24 @@ jump_out = False
 while jump_out == False:
 
     #INPUT
-    
+    gameDisplay.fill((200,200,200))
     keys = pygame.key.get_pressed()
     for i in range(len(controls)):
     	if(keys[controls[i]]):
-    		print("slot", i)
-    		players[playerTurn].Use(i)
+    		#print("slot", i)
+    		players[playerTurn].use(i)
        		
        
     #GRAPHICS
     
-    gameDisplay.fill((127,127,127))
+    
 
     #GRID
+    g_color=150
     for i in range(33):
-    	pygame.draw.line(gameDisplay,(0,0,0),[i*32,0],[i*32,32*18],2)
+    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[i*32-1,0],[i*32-1,32*18],2)
     	if(i<19):
-    		pygame.draw.line(gameDisplay,(0,0,0),[0,i*32],[32*32,32*i],2)
+    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[0,i*32-1],[32*32,32*i-1],2)
 
     for player in players:
         
