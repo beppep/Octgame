@@ -1,7 +1,14 @@
 #import pygametools as pt
 import pygame
 import math
+import time
 
+name = "Tiles/Octagame1Tiles_00.png"
+imageCore = pygame.image.load(name)
+name = "Tiles/Octagame1Tiles_01.png"
+imageWheel = pygame.image.load(name)
+name = "Tiles/Octagame1Tiles_02.png"
+imageWheel2 = pygame.image.load(name)
 
 #8 1 2
 #7 0 3
@@ -23,10 +30,7 @@ players = []
 global playerTurn
 playerTurn = 0
 
-#                  FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG   FIXA ROTATE PNG
 
-name = "Tiles/Octagame1Tiles_00.png"
-imageCore = pygame.image.load(name)
 
 class Player:
 
@@ -34,10 +38,14 @@ class Player:
         self.x=x
         self.y=y
         self.layout = layout
+        
         players.append(self)
 
     def Use(self, slot):
         global playerTurn
+
+        #SET DIRECTIONS
+        
         dirX=0
         dirY=0
         if(slot == 2 or slot == 3 or slot == 4):
@@ -48,32 +56,46 @@ class Player:
             dirY = -1
         if(slot == 4 or slot == 5 or slot == 6):
             dirY = 1
-        
-        if (self.layout[slot] == 0):
-            pass
-        if (self.layout[slot] == 1):
-            self.x+=dirX
-            self.y+=dirY
-            print("move",dirX,dirY)
-        if (self.layout[slot] == 2):
-            pass
 
+        #DO ACTION
+
+        if(not(dirX==0 and dirY==0)):
+
+            #DO WEAPON ACTION
+            
+            if (self.layout[slot] == 0):
+                pass
+            if (self.layout[slot] == 1):
+                self.x+=dirX
+                self.y+=dirY
+                print("move",dirX,dirY)
+            if (self.layout[slot] == 2):
+                pass
+
+        else:
+
+            #DO CORE ACTION
+
+            if(self.layout[slot] == 0):
+                
+                
+        #END TURN
         
-        sleep(2)
+        time.sleep(2)
         playerTurn=1-playerTurn
         
-
             
 player1=Player(5,7,[1,1,1,1,1,0,1,1,1,0])
 player2=Player(1,2,[1,1,0,0,0,1,1,1,0,0])
 
 
-#pt.start(32*32, 32*18)
 global gameDisplay
 gameDisplay = pygame.display.set_mode((32*32, 32*18))
 
 jump_out = False
 while jump_out == False:
+
+    #INPUT
     
     keys = pygame.key.get_pressed()
     
@@ -96,9 +118,8 @@ while jump_out == False:
     if(keys[pygame.K_q]):
        players[playerTurn].Use(8)
        
+    #GRAPHICS
     
-    
-    #pygame.draw.rect(gameDisplay, (127,127,127), (0, 0, 32*32, 32*18),0)
     gameDisplay.fill((127,127,127))
 
     for player in players:
@@ -106,22 +127,16 @@ while jump_out == False:
         
         gameDisplay.blit(imageCore,(player.x*32, player.y*32))
         
-        #pt.show_image(image_name=name, size_x=32, size_y=32, x=player.x*32, y=player.y*32) #main body sprite
-
+        
         for n in range(len(player.layout)):
             
             if(n%2==1 and player.layout[n]>0):
-                name = "Tiles/Octagame1Tiles_01.png"
-                #pt.show_image(image_name=name, size_x=32, size_y=32, x=player.x*32, y=player.y*32) #ROTATE
-                image = pygame.image.load(name)
-                image = pygame.transform.rotate(image, 45*(n-1))
-                gameDisplay.blit(image,(player.x*32, player.y*32))
+                imageTemp = pygame.transform.rotate(imageWheel, 45*(n-1))
+                gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
+            
             elif(player.layout[n]>0):
-                name = "Tiles/Octagame1Tiles_02.png"
-                #pt.show_image(image_name=name, size_x=32, size_y=32, x=player.x*32, y=player.y*32) #ROTATE
-                image = pygame.image.load(name)
-                image = pygame.transform.rotate(image, 45*(n))
-                gameDisplay.blit(image,(player.x*32, player.y*32))
+                imageTemp = pygame.transform.rotate(imageWheel2, 45*(n))
+                gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
 
 
 
