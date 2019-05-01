@@ -6,19 +6,15 @@ import time
 controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pygame.K_z,pygame.K_a,pygame.K_q]
 
 imageList = []
+coreImageList = []
 
-for i in range(11):
+for i in range(12):
 	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
 	imageList.append(pygame.image.load(name))
+for i in range(4):
+	name = "Tiles/Octagame2Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här
+	coreImageList.append(pygame.image.load(name))
 
-"""
-name = "Tiles/Octagame1Tiles_00.png"
-imageCore = pygame.image.load(name)
-name = "Tiles/Octagame1Tiles_01.png"
-imageWheel = pygame.image.load(name)
-name = "Tiles/Octagame1Tiles_02.png"
-imageWheel2 = pygame.image.load(name)
-"""
 #8 1 2
 #7 0 3
 #6 5 4
@@ -62,6 +58,8 @@ class Player:
         print("Death")
         #players.pop(players.index(self))
 
+
+    #USE USE USE USE USE USE USE USE USE USE USE USE USE 
     def use(self, slot):
         global playerTurn
         global gameDisplay
@@ -113,11 +111,12 @@ class Player:
                 self.layout = rotateList(self.layout,1)
             if(self.layout[slot] == 2):
                 self.layout = rotateList(self.layout,7)
-                
+            if(self.layout[slot] == 3):
+                self.layout = rotateList(self.layout,4)
                 
         #END TURN
         
-        #time.sleep(2)
+        #time.sleep(1) #updatera screeen innan sleep
         playerTurn=1-playerTurn
         
 def rotateList(l,iterations):
@@ -131,8 +130,8 @@ def rotateList(l,iterations):
 
 
 
-player1=Player(5,7,[3,3,3,3,3,3,3,3,3])
-player2=Player(1,2,[1,1,1,1,1,1,1,1,1])
+player1=Player(5,7,[3,4,3,2,3,4,1,2,1])
+player2=Player(1,2,[2,3,2,4,1,1,2,3,4])
 
 
 global gameDisplay
@@ -161,15 +160,16 @@ while jump_out == False:
     	if(i<19):
     		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[0,i*32-1],[32*32,32*i-1],2)
 
+
+    #PLAYERS
     for player in players:
         
         
-        gameDisplay.blit(imageList[0],(player.x*32, player.y*32))
+        gameDisplay.blit(imageList[0],(player.x*32, player.y*32)) #octagon
         
         
         for n in range(len(player.layout)):
             if(n!=0):
-            
                 if(n%2==1 and player.layout[n]>0):
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2-1], -45*(n-1))
                     gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
@@ -178,7 +178,8 @@ while jump_out == False:
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2], -45*(n))
                     gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
 
-
+            else:
+                gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32, player.y*32))
 
 
 
