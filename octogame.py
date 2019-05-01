@@ -8,7 +8,11 @@ controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pyga
 imageList = []
 coreImageList = []
 
+<<<<<<< Updated upstream
 for i in range(12):
+=======
+for i in range(16):
+>>>>>>> Stashed changes
 	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
 	imageList.append(pygame.image.load(name))
 for i in range(4):
@@ -130,8 +134,13 @@ def rotateList(l,iterations):
 
 
 
+<<<<<<< Updated upstream
 player1=Player(5,7,[3,4,3,2,3,4,1,2,1])
 player2=Player(1,2,[2,3,2,4,1,1,2,3,4])
+=======
+player1=Player(5,7,[2,4,1,2,3,2,4,3,5])
+player2=Player(1,2,[3,2,3,4,6,5,4,7,1])
+>>>>>>> Stashed changes
 
 
 global gameDisplay
