@@ -3,13 +3,22 @@ import pygame
 import math
 import time
 
+controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pygame.K_z,pygame.K_a,pygame.K_q]
+
+imageList = []
+
+for i in range(11):
+	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
+	imageList.append(pygame.image.load(name))
+
+"""
 name = "Tiles/Octagame1Tiles_00.png"
 imageCore = pygame.image.load(name)
 name = "Tiles/Octagame1Tiles_01.png"
 imageWheel = pygame.image.load(name)
 name = "Tiles/Octagame1Tiles_02.png"
 imageWheel2 = pygame.image.load(name)
-
+"""
 #8 1 2
 #7 0 3
 #6 5 4
@@ -43,7 +52,7 @@ class Player:
 
     def Use(self, slot):
         global playerTurn
-
+        print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
         
         dirX=0
@@ -77,16 +86,16 @@ class Player:
             #DO CORE ACTION
 
             if(self.layout[slot] == 0):
-                
+                pass
                 
         #END TURN
         
-        time.sleep(2)
+        #time.sleep(2)
         playerTurn=1-playerTurn
         
             
-player1=Player(5,7,[1,1,1,1,1,0,1,1,1,0])
-player2=Player(1,2,[1,1,0,0,0,1,1,1,0,0])
+player1=Player(5,7,[0,1,0,0,1,0,1,0,1,0])
+player2=Player(1,2,[0,0,1,1,0,1,0,1,0,0])
 
 
 global gameDisplay
@@ -98,45 +107,38 @@ while jump_out == False:
     #INPUT
     
     keys = pygame.key.get_pressed()
-    
-    if(keys[pygame.K_s]):
-       players[playerTurn].Use(0)
-    if(keys[pygame.K_w]):
-       players[playerTurn].Use(1)
-    if(keys[pygame.K_e]):
-       players[playerTurn].Use(2)
-    if(keys[pygame.K_d]):
-       players[playerTurn].Use(3)
-    if(keys[pygame.K_c]):
-       players[playerTurn].Use(4)
-    if(keys[pygame.K_x]):
-       players[playerTurn].Use(5)
-    if(keys[pygame.K_z]):
-       players[playerTurn].Use(6)
-    if(keys[pygame.K_a]):
-       players[playerTurn].Use(7)
-    if(keys[pygame.K_q]):
-       players[playerTurn].Use(8)
+    for i in range(len(controls)):
+    	if(keys[controls[i]]):
+    		print("slot", i)
+    		players[playerTurn].Use(i)
+       		
        
     #GRAPHICS
     
     gameDisplay.fill((127,127,127))
 
+    #GRID
+    for i in range(33):
+    	pygame.draw.line(gameDisplay,(0,0,0),[i*32,0],[i*32,32*18],2)
+    	if(i<19):
+    		pygame.draw.line(gameDisplay,(0,0,0),[0,i*32],[32*32,32*i],2)
+
     for player in players:
         
         
-        gameDisplay.blit(imageCore,(player.x*32, player.y*32))
+        gameDisplay.blit(imageList[0],(player.x*32, player.y*32))
         
         
         for n in range(len(player.layout)):
+            if(n!=0):
             
-            if(n%2==1 and player.layout[n]>0):
-                imageTemp = pygame.transform.rotate(imageWheel, 45*(n-1))
-                gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
+                if(n%2==1 and player.layout[n]>0):
+                    imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2-1], -45*(n-1))
+                    gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
             
-            elif(player.layout[n]>0):
-                imageTemp = pygame.transform.rotate(imageWheel2, 45*(n))
-                gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
+                elif(player.layout[n]>0):
+                    imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2], -45*(n))
+                    gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
 
 
 
