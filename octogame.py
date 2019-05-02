@@ -9,7 +9,7 @@ imageList = []
 coreImageList = []
 
 
-for i in range(16):
+for i in range(13):
 	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
 	imageList.append(pygame.image.load(name))
 for i in range(4):
@@ -31,6 +31,7 @@ for i in range(4):
 #0=broken?
 #1=spin right
 #2=spin left
+#3=flip horizontal
 
 players = []
 global playerTurn
@@ -50,7 +51,9 @@ class Player:
         players.append(self)
 
     def hurt(self,slot):
-        if(self.layout[slot] == 0):
+        if(self.layout[slot] == 2):
+            pass
+        elif(self.layout[slot] == 0):
             self.die()
         else:
             self.layout[slot] = 0
@@ -64,7 +67,6 @@ class Player:
     def use(self, slot):
         global playerTurn
         global gameDisplay
-        print(gameDisplay)
         opponent = players[1-playerTurn]
         #print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
@@ -113,25 +115,26 @@ class Player:
             if(self.layout[slot] == 2):
                 self.layout = rotateList(self.layout,7)
             if(self.layout[slot] == 3):
-                self.layout = rotateList(self.layout,4)
+                self.layout = flipList(self.layout)
                 
         #END TURN
         
         #time.sleep(1) #updatera screeen innan sleep
         playerTurn=1-playerTurn
         
-def rotateList(l,iterations):
+def rotateList(l,iterations): 
     for i in range(iterations):
-        temporaryCore=l.pop(0)
-        l=[temporaryCore]+[l[j-1] for j in range(len(l))]
-    return l
+        l=[l.pop(0)]+[l[j-1] for j in range(len(l))]
+    return l # returns rotated list
+
+def flipList(l):
+    return [l.pop(0)] + [l[len(l)-j-4] for j in range(len(l))]
 
 
 
 
 
-
-player1=Player(5,7,[3,4,3,2,3,4,1,2,1])
+player1=Player(5,7,[3,1,2,3,4,0,0,0,0])
 player2=Player(1,2,[2,3,2,4,1,1,2,3,4])
 
 
