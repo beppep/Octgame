@@ -23,8 +23,8 @@ for i in range(4):
 
 #0=broken
 #1=wheel
-#2=
-#3=
+#2=Shield
+#3=Laser
 #4=
 
 
