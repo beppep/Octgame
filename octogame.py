@@ -10,7 +10,7 @@ imageList = []
 coreImageList = []
 
 
-for i in range(13):
+for i in range(15):
 	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
 	imageList.append(pygame.image.load(name))
 for i in range(4):
@@ -26,8 +26,10 @@ for i in range(4):
 #1=Wheel
 #2=Shield
 #3=Laser
-#4=ssbm™
+#4=Teleport
 #5=BackBurner™
+#6=Borr
+#7=Bomb
 
 
 
@@ -39,17 +41,58 @@ for i in range(4):
 #3=flip horizontal
 
 players = []
+projectiles = []
 global playerTurn
 global spacePressed
 playerTurn = False
+
 spacePressed = True
+class Projectile:
+    """docstring for Projectile"""
+    def __init__(self,x, y,projectile_type,lifespan,dirX=0,dirY=0):
+        self.life = lifespan
+        self.projectile_type = projectile_type
+        self.x=x
+        self.y=y
+        self.dirX=dirX
+        self.dirY=dirY
+        self.owner=players[playerTurn]
+        projectiles.append(self)
+        
+
+    def aging(self):
+        self.life-=1
+        if(not isInObject(self.x+self.dirX,self.y+self.dirY)):
+            self.x+=self.dirX
+            self.y+=self.dirY
+        if(not self.life):
+            self.explode()
+
+    def explode(self):
+        if(self.projectile_type=="bomb"):
+            pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x-1),32*(self.y-1),32*3,32*3],0)
+            for i in range(1,8+1):
+                dirX,dirY = slotToDir(i)
+                newx,newy = [dirX+self.x,dirY+self.y]
+                for player in players:
+                    if(player.x==newx and player.y==newy):
+                        player.hurt(oppositeSlot(dirToSlot(dirX,dirY)))
+            projectiles.remove(self)
+        if(self.projectile_type=="teleport"):
+            self.owner.x=self.x
+            self.owner.y=self.y
+            projectiles.remove(self)
+                
 
 
+            
+
+        
 class Player:
 
     def __init__(self, x=1, y=1, layout=False):
         if(not layout):
-            self.layout=[1]+[random.randint(1,5) for i in range(8)]
+            self.layout=[1]+[random.randint(1,7) for i in range(8)]
         else:
             self.layout = layout
         self.x=x
@@ -84,16 +127,7 @@ class Player:
         #print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
         
-        self.dirX=0
-        self.dirY=0
-        if(slot == 2 or slot == 3 or slot == 4):
-            self.dirX = 1
-        if(slot == 6 or slot == 7 or slot == 8):
-            self.dirX = -1
-        if(slot == 1 or slot == 2 or slot == 8):
-            self.dirY = -1
-        if(slot == 4 or slot == 5 or slot == 6):
-            self.dirY = 1
+        self.dirX,self.dirY=slotToDir(slot)
         newx = self.x + self.dirX
         newy = self.y + self.dirY
 
@@ -103,32 +137,43 @@ class Player:
 
             #DO WEAPON ACTION
             
-            if (self.layout[slot] == 0):
+            if (self.layout[slot] == 0): #BROKEN
                 pass
-            if (self.layout[slot] == 1):
+            if (self.layout[slot] == 1): #WHEEL
                 
-                if(newy>=0 and newy<18 and newx>=0 and newx<32 and not(newy == players[1-playerTurn].y and newx == players[1-playerTurn].x)):
+                if(newy>=0 and newy<18 and newx>=0 and newx<32 and not(isInObject(newx,newy))):
                     self.x = newx
                     self.y = newy
                     #print("move",dirX,dirY)
-            if (self.layout[slot] == 3):
+            if (self.layout[slot] == 3): #GUN
                 #print("shoot")
 
                 pygame.draw.line(gameDisplay,(255,100,120),[self.x*32+16,self.y*32+16],[self.x*32+self.dirX*32*32+16,self.y*32+self.dirY*32*32+16],2)
                 if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
-                    opponent.hurt((slot+4-1)%8+1)
-                    
-            if (self.layout[slot] == 4):
-                pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x+self.dirX),32*(self.y+self.dirY),32,32],0)
-                if(newx==opponent.x and newy==opponent.y):
-                    opponent.hurt((slot+4-1)%8+1)
-                    opponent.hurt((slot+4-1)%8+1)
-            if (self.layout[slot] == 5):
+                    opponent.hurt(oppositeSlot(slot))
+
+            if (self.layout[slot] == 4): #Teleport
+                if(not isInObject(self.x + self.dirX, self.y + self.dirY)):
+                    Projectile(self.x + self.dirX, self.y + self.dirY,"teleport",3,self.dirX,self.dirY)        
+            
+
+            if (self.layout[slot] == 5): #BACKBURNER™
                 renewx = self.x - self.dirX
                 renewy = self.y - self.dirY
-                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(renewy == players[1-playerTurn].y and renewx == players[1-playerTurn].x)):
+                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(isInObject(newx,newy))):
                     self.x = renewx
                     self.y = renewy
+
+            if (self.layout[slot] == 6): #MELEE
+                pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x+self.dirX),32*(self.y+self.dirY),32,32],0)
+                if(newx==opponent.x and newy==opponent.y):
+                    opponent.hurt(oppositeSlot(slot))
+                    opponent.hurt(oppositeSlot(slot))
+
+            if (self.layout[slot] == 7): #BOMB
+                if(isInObject(self.x + self.dirX*2, self.y + self.dirY*2)):
+                    Projectile(self.x + self.dirX*2, self.y + self.dirY*2,"bomb",3)
+
 
         else:
 
@@ -154,11 +199,27 @@ def rotateList(l,iterations):
 def flipList(l):
     return [l.pop(0)] + [l[len(l)-j-4] for j in range(len(l))]
 
+def slotToDir(slot):
+    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)] 
+    return( datas[slot] )
 
+def dirToSlot(dirX,dirY):
+    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)] 
+    return datas.index((dirX,dirY))
 
+def isInObject(x,y):
+    for obj in projectiles+players:
+        if(obj.x==x and obj.y==y):
+            return True
+   # for obj in players:
+    #    if(obj.x==x and obj.y==y):
+    #        return True
+    return False
 
+def oppositeSlot(slot):
+    return (slot-4-1)%8+1
 
-player1=Player(5,7)
+player1=Player(2,1)
 player2=Player(1,2)
 
 
@@ -179,13 +240,15 @@ while jump_out == False:
     		players[playerTurn].use(i)
     if((not spacePressed) and keys[pygame.K_SPACE]):
         spacePressed = True
+        for projectile in projectiles:
+            projectile.aging()
 
 
        		
        
     #GRAPHICS
     
-    
+
 
     #GRID
     g_color=50*(spacePressed)+100
@@ -217,7 +280,8 @@ while jump_out == False:
             else:
                 gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32, player.y*32))
 
-
+    for projectile in projectiles:
+        gameDisplay.blit(imageList[0],(projectile.x*32, projectile.y*32))
 
 
     #pt.update()
