@@ -11,15 +11,20 @@ coreImageList = []
 projectileImageList = []
 
 
+scaleFactor = 2
+
 for i in range(15):
 	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
-	imageList.append(pygame.image.load(name))
+	imageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
+
 for i in range(4):
 	name = "Tiles/Octagame2Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här
-	coreImageList.append(pygame.image.load(name))
+    coreImageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
+	
 for i in range(2):
 	name = "Tiles/Octagame3Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här oclså lol
-	projectileImageList.append(pygame.image.load(name))
+    projectileImageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
+
 
 #8 1 2
 #7 0 3
@@ -63,6 +68,7 @@ class Projectile:
         self.dirY=dirY
         self.owner=players[playerTurn]
         projectiles.append(self)
+        print("Hello, iam aprojectile")
         
 
     def aging(self):
@@ -75,7 +81,7 @@ class Projectile:
 
     def explode(self):
         if(self.projectile_type=="bomb"):
-            pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x-1),32*(self.y-1),32*3,32*3],0)
+            pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x-1)*scaleFactor,32*(self.y-1)*scaleFactor,32*3*scaleFactor,32*3*scaleFactor],0)
             for i in range(1,8+1):
                 dirX,dirY = slotToDir(i)
                 newx,newy = [dirX+self.x,dirY+self.y]
@@ -146,14 +152,14 @@ class Player:
                 pass
             if (self.layout[slot] == 1): #WHEEL
                 
-                if(newy>=0 and newy<18 and newx>=0 and newx<32 and not(isInObject(newx,newy))):
+                if(newy>=0 and newy<(18/scaleFactor) and newx>=0 and newx<(32/scaleFactor) and not(isInObject(newx,newy))):
                     self.x = newx
                     self.y = newy
                     #print("move",dirX,dirY)
             if (self.layout[slot] == 3): #GUN
                 #print("shoot")
 
-                pygame.draw.line(gameDisplay,(255,100,120),[self.x*32+16,self.y*32+16],[self.x*32+self.dirX*32*32+16,self.y*32+self.dirY*32*32+16],2)
+                pygame.draw.line(gameDisplay,(255,100,120),[self.x*32*scaleFactor+16*scaleFactor,self.y*32*scaleFactor+16*scaleFactor],[self.x*32*scaleFactor+self.dirX*32*32*scaleFactor+16*scaleFactor,self.y*32*scaleFactor+self.dirY*32*32*scaleFactor+16*scaleFactor],2)
                 if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
                     opponent.hurt(oppositeSlot(slot))
 
@@ -258,35 +264,36 @@ while jump_out == False:
     #GRID
     g_color=50*(spacePressed)+100
     for i in range(33):
-    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[i*32-1,0],[i*32-1,32*18],2)
+    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[i*32*scaleFactor-1,0],[i*32*scaleFactor-1,32*18],2)
     	if(i<19):
-    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[0,i*32-1],[32*32,32*i-1],2)
+    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[0,i*32*scaleFactor-1],[32*32*scaleFactor,32*i*scaleFactor-1],2)
 
 
     #PLAYERS
     for player in players:
         
         if(playerTurn== players.index(player)):
-            gameDisplay.blit(imageList[0],(player.x*32, player.y*32)) #octagon         
+            gameDisplay.blit(imageList[0],(player.x*32*scaleFactor, player.y*32*scaleFactor)) #octagon         
         else:
-            gameDisplay.blit(coreImageList[0],(player.x*32, player.y*32)) #octagon
+            gameDisplay.blit(coreImageList[0],(player.x*32*scaleFactor, player.y*32*scaleFactor)) #octagon
 
         
         for n in range(len(player.layout)):
             if(n!=0):
                 if(n%2==1 and player.layout[n]>0):
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2-1], -45*(n-1))
-                    gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
+                    gameDisplay.blit(imageTemp,(player.x*32*scaleFactor, player.y*32*scaleFactor))
             
                 elif(player.layout[n]>0):
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2], -45*(n))
-                    gameDisplay.blit(imageTemp,(player.x*32, player.y*32))
+                    gameDisplay.blit(imageTemp,(player.x*32*scaleFactor, player.y*32*scaleFactor))
 
             else:
-                gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32, player.y*32))
+                gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32*scaleFactor, player.y*32*scaleFactor))
 
     for projectile in projectiles:
-        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],(projectile.x*32, projectile.y*32))
+        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],(projectile.x*32*scaleFactor, projectile.y*32*scaleFactor))
+
 
 
     #pt.update()
