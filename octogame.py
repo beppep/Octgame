@@ -2,6 +2,7 @@
 import pygame
 import math
 import time
+import random
 
 controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pygame.K_z,pygame.K_a,pygame.K_q]
 
@@ -21,11 +22,15 @@ for i in range(4):
 #6 5 4
 
 
-#0=broken
-#1=wheel
+#0=Broken
+#1=Wheel
 #2=Shield
 #3=Laser
-#4=
+#4=ssbm™
+#5=BackBurner™
+
+
+
 
 
 #0=broken?
@@ -35,24 +40,30 @@ for i in range(4):
 
 players = []
 global playerTurn
-playerTurn = 0
-
+global spacePressed
+playerTurn = False
+spacePressed = True
 
 
 class Player:
 
-    def __init__(self, x=1, y=1, layout=[1,1,0,0,0,0,0,0,0]):
+    def __init__(self, x=1, y=1, layout=False):
+        if(not layout):
+            self.layout=[1]+[random.randint(1,5) for i in range(8)]
+        else:
+            self.layout = layout
         self.x=x
         self.y=y
-        self.layout = layout
+        
         self.dirX=0
         self.dirY=0
         
         players.append(self)
 
     def hurt(self,slot):
+        print("Hurt")
         if(self.layout[slot] == 2):
-            pass
+            print("Ha, shield")
         elif(self.layout[slot] == 0):
             self.die()
         else:
@@ -67,7 +78,9 @@ class Player:
     def use(self, slot):
         global playerTurn
         global gameDisplay
-        opponent = players[1-playerTurn]
+        global spacePressed
+        opponent = players[not playerTurn]
+        spacePressed=False
         #print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
         
@@ -81,6 +94,9 @@ class Player:
             self.dirY = -1
         if(slot == 4 or slot == 5 or slot == 6):
             self.dirY = 1
+        newx = self.x + self.dirX
+        newy = self.y + self.dirY
+
         #DO ACTION
 
         if(not(self.dirX==0 and self.dirY==0)):
@@ -90,8 +106,7 @@ class Player:
             if (self.layout[slot] == 0):
                 pass
             if (self.layout[slot] == 1):
-                newx = self.x + self.dirX
-                newy = self.y + self.dirY
+                
                 if(newy>=0 and newy<18 and newx>=0 and newx<32 and not(newy == players[1-playerTurn].y and newx == players[1-playerTurn].x)):
                     self.x = newx
                     self.y = newy
@@ -100,11 +115,20 @@ class Player:
                 #print("shoot")
 
                 pygame.draw.line(gameDisplay,(255,100,120),[self.x*32+16,self.y*32+16],[self.x*32+self.dirX*32*32+16,self.y*32+self.dirY*32*32+16],2)
-                opponent = players[1-playerTurn]
                 if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
                     opponent.hurt((slot+4-1)%8+1)
-                    print("Hurt")
-                
+                    
+            if (self.layout[slot] == 4):
+                pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x+self.dirX),32*(self.y+self.dirY),32,32],0)
+                if(newx==opponent.x and newy==opponent.y):
+                    opponent.hurt((slot+4-1)%8+1)
+                    opponent.hurt((slot+4-1)%8+1)
+            if (self.layout[slot] == 5):
+                renewx = self.x - self.dirX
+                renewy = self.y - self.dirY
+                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(renewy == players[1-playerTurn].y and renewx == players[1-playerTurn].x)):
+                    self.x = renewx
+                    self.y = renewy
 
         else:
 
@@ -120,7 +144,7 @@ class Player:
         #END TURN
         
         #time.sleep(1) #updatera screeen innan sleep
-        playerTurn=1-playerTurn
+        playerTurn = not playerTurn
         
 def rotateList(l,iterations): 
     for i in range(iterations):
@@ -134,8 +158,8 @@ def flipList(l):
 
 
 
-player1=Player(5,7,[3,1,2,3,4,0,0,0,0])
-player2=Player(1,2,[2,3,2,4,1,1,2,3,4])
+player1=Player(5,7)
+player2=Player(1,2)
 
 
 global gameDisplay
@@ -145,12 +169,18 @@ jump_out = False
 while jump_out == False:
 
     #INPUT
-    gameDisplay.fill((200,200,200))
+    bg_color=50*(spacePressed)+150
+    gameDisplay.fill([bg_color]*3)
     keys = pygame.key.get_pressed()
     for i in range(len(controls)):
-    	if(keys[controls[i]]):
+
+    	if(keys[controls[i]] and spacePressed):
     		#print("slot", i)
     		players[playerTurn].use(i)
+    if((not spacePressed) and keys[pygame.K_SPACE]):
+        spacePressed = True
+
+
        		
        
     #GRAPHICS
@@ -158,7 +188,7 @@ while jump_out == False:
     
 
     #GRID
-    g_color=150
+    g_color=50*(spacePressed)+100
     for i in range(33):
     	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[i*32-1,0],[i*32-1,32*18],2)
     	if(i<19):
@@ -168,9 +198,11 @@ while jump_out == False:
     #PLAYERS
     for player in players:
         
-        
-        gameDisplay.blit(imageList[0],(player.x*32, player.y*32)) #octagon
-        
+        if(playerTurn== players.index(player)):
+            gameDisplay.blit(imageList[0],(player.x*32, player.y*32)) #octagon         
+        else:
+            gameDisplay.blit(coreImageList[0],(player.x*32, player.y*32)) #octagon
+
         
         for n in range(len(player.layout)):
             if(n!=0):
