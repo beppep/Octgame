@@ -8,6 +8,7 @@ controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pyga
 
 imageList = []
 coreImageList = []
+projectileImageList = []
 
 
 for i in range(15):
@@ -16,6 +17,9 @@ for i in range(15):
 for i in range(4):
 	name = "Tiles/Octagame2Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här
 	coreImageList.append(pygame.image.load(name))
+for i in range(2):
+	name = "Tiles/Octagame3Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här oclså lol
+	projectileImageList.append(pygame.image.load(name))
 
 #8 1 2
 #7 0 3
@@ -42,6 +46,7 @@ for i in range(4):
 
 players = []
 projectiles = []
+projectileTypes = ["bomb","teleport"]
 global playerTurn
 global spacePressed
 playerTurn = False
@@ -171,7 +176,7 @@ class Player:
                     opponent.hurt(oppositeSlot(slot))
 
             if (self.layout[slot] == 7): #BOMB
-                if(isInObject(self.x + self.dirX*2, self.y + self.dirY*2)):
+                if(not isInObject(self.x + self.dirX*2, self.y + self.dirY*2)):
                     Projectile(self.x + self.dirX*2, self.y + self.dirY*2,"bomb",3)
 
 
@@ -281,7 +286,7 @@ while jump_out == False:
                 gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32, player.y*32))
 
     for projectile in projectiles:
-        gameDisplay.blit(imageList[0],(projectile.x*32, projectile.y*32))
+        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],(projectile.x*32, projectile.y*32))
 
 
     #pt.update()
