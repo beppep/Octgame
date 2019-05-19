@@ -3,27 +3,27 @@ import pygame
 import math
 import time
 import random
-
 controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pygame.K_z,pygame.K_a,pygame.K_q]
-
-imageList = []
-coreImageList = []
-projectileImageList = []
 
 
 scaleFactor = 2
 
-for i in range(15):
-	name = "Tiles/Octagame1Tiles_" + "0"*(i<10) + str(i) + ".png"
-	imageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
+def coord(*arg):
+    return [x*32*scaleFactor for x in arg]
 
-for i in range(4):
-	name = "Tiles/Octagame2Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här
-    coreImageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
-	
-for i in range(2):
-	name = "Tiles/Octagame3Tiles_" + str(i) + ".png" #lol nloel dom heter inte 00 01 här oclså lol
-    projectileImageList.append(pygame.transform.scale(pygame.image.load(name),(int(32*scaleFactor),int(32*scaleFactor))))
+def addImagesToList(amount,tileNum,extrazero=False):
+    array = []
+    for i in range(amount):
+        name = "Tiles/Octagame"+str(tileNum)+"Tiles_" + "0"*(i<10)*extrazero + str(i) + ".png"
+        array.append(pygame.transform.scale(pygame.image.load(name),coord(1,1)))
+    return array
+
+
+
+imageList = addImagesToList(15,1,extrazero=True)
+coreImageList = addImagesToList(7,2)
+projectileImageList = addImagesToList(2,3)
+
 
 
 #8 1 2
@@ -48,7 +48,8 @@ for i in range(2):
 #1=spin right
 #2=spin left
 #3=flip horizontal
-
+global players
+global projectile
 players = []
 projectiles = []
 projectileTypes = ["bomb","teleport"]
@@ -81,7 +82,7 @@ class Projectile:
 
     def explode(self):
         if(self.projectile_type=="bomb"):
-            pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x-1)*scaleFactor,32*(self.y-1)*scaleFactor,32*3*scaleFactor,32*3*scaleFactor],0)
+            pygame.draw.rect(gameDisplay,(255,100,120),coord(self.x-1,self.y-1,3,3),0)
             for i in range(1,8+1):
                 dirX,dirY = slotToDir(i)
                 newx,newy = [dirX+self.x,dirY+self.y]
@@ -93,12 +94,16 @@ class Projectile:
             self.owner.x=self.x
             self.owner.y=self.y
             projectiles.remove(self)
+
+class Vec: # implementera vektorer istället för x,y och dirX,dirY
+    def __init__(self,*arg):
+        self.lst = arg
+        self.x = self.lst[0]
+        self.y = self.lst[1]
+    def __call__(self):
+        return self.lst
+
                 
-
-
-            
-
-        
 class Player:
 
     def __init__(self, x=1, y=1, layout=False):
@@ -159,7 +164,7 @@ class Player:
             if (self.layout[slot] == 3): #GUN
                 #print("shoot")
 
-                pygame.draw.line(gameDisplay,(255,100,120),[self.x*32*scaleFactor+16*scaleFactor,self.y*32*scaleFactor+16*scaleFactor],[self.x*32*scaleFactor+self.dirX*32*32*scaleFactor+16*scaleFactor,self.y*32*scaleFactor+self.dirY*32*32*scaleFactor+16*scaleFactor],2)
+                pygame.draw.line(gameDisplay,(255,100,120),coord(self.x+0.5,self.y+0.5),coord(self.x+self.dirX*32,self.y+self.dirY*32),2)
                 if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
                     opponent.hurt(oppositeSlot(slot))
 
@@ -171,12 +176,12 @@ class Player:
             if (self.layout[slot] == 5): #BACKBURNER™
                 renewx = self.x - self.dirX
                 renewy = self.y - self.dirY
-                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(isInObject(newx,newy))):
+                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(isInObject(renewx,renewy))):
                     self.x = renewx
                     self.y = renewy
 
             if (self.layout[slot] == 6): #MELEE
-                pygame.draw.rect(gameDisplay,(255,100,120),[32*(self.x+self.dirX),32*(self.y+self.dirY),32,32],0)
+                pygame.draw.rect(gameDisplay,(255,100,120),coord(self.x+self.dirX, self.y+self.dirY, 1, 1),0)
                 if(newx==opponent.x and newy==opponent.y):
                     opponent.hurt(oppositeSlot(slot))
                     opponent.hurt(oppositeSlot(slot))
@@ -202,6 +207,12 @@ class Player:
         #time.sleep(1) #updatera screeen innan sleep
         playerTurn = not playerTurn
         
+def isInObject(x,y):
+    for obj in projectiles+players:
+        if(obj.x==x and obj.y==y):
+            return True
+    return False
+
 def rotateList(l,iterations): 
     for i in range(iterations):
         l=[l.pop(0)]+[l[j-1] for j in range(len(l))]
@@ -218,17 +229,15 @@ def dirToSlot(dirX,dirY):
     datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)] 
     return datas.index((dirX,dirY))
 
-def isInObject(x,y):
-    for obj in projectiles+players:
-        if(obj.x==x and obj.y==y):
-            return True
-   # for obj in players:
-    #    if(obj.x==x and obj.y==y):
-    #        return True
-    return False
-
 def oppositeSlot(slot):
     return (slot-4-1)%8+1
+
+
+
+
+
+
+
 
 player1=Player(2,1)
 player2=Player(1,2)
@@ -264,35 +273,36 @@ while jump_out == False:
     #GRID
     g_color=50*(spacePressed)+100
     for i in range(33):
-    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[i*32*scaleFactor-1,0],[i*32*scaleFactor-1,32*18],2)
+    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(i,0),coord(i,18),1)
     	if(i<19):
-    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),[0,i*32*scaleFactor-1],[32*32*scaleFactor,32*i*scaleFactor-1],2)
+    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(0,i),coord(32,i),1)
 
 
     #PLAYERS
     for player in players:
+        pos = coord(player.x, player.y)
         
         if(playerTurn== players.index(player)):
-            gameDisplay.blit(imageList[0],(player.x*32*scaleFactor, player.y*32*scaleFactor)) #octagon         
+            gameDisplay.blit(imageList[0],pos) #octagon         
         else:
-            gameDisplay.blit(coreImageList[0],(player.x*32*scaleFactor, player.y*32*scaleFactor)) #octagon
+            gameDisplay.blit(coreImageList[0],pos) #octagon
 
         
         for n in range(len(player.layout)):
             if(n!=0):
                 if(n%2==1 and player.layout[n]>0):
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2-1], -45*(n-1))
-                    gameDisplay.blit(imageTemp,(player.x*32*scaleFactor, player.y*32*scaleFactor))
+                    gameDisplay.blit(imageTemp,pos)
             
                 elif(player.layout[n]>0):
                     imageTemp = pygame.transform.rotate(imageList[player.layout[n]*2], -45*(n))
-                    gameDisplay.blit(imageTemp,(player.x*32*scaleFactor, player.y*32*scaleFactor))
+                    gameDisplay.blit(imageTemp,pos)
 
             else:
-                gameDisplay.blit(coreImageList[player.layout[0]],(player.x*32*scaleFactor, player.y*32*scaleFactor))
+                gameDisplay.blit(coreImageList[player.layout[0]],pos)
 
     for projectile in projectiles:
-        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],(projectile.x*32*scaleFactor, projectile.y*32*scaleFactor))
+        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],coord(projectile.x, projectile.y))
 
 
 
