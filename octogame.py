@@ -3,9 +3,8 @@ import pygame
 import math
 import time
 import random
+
 controls=[pygame.K_s,pygame.K_w,pygame.K_e,pygame.K_d,pygame.K_c,pygame.K_x,pygame.K_z,pygame.K_a,pygame.K_q]
-
-
 scaleFactor = 2
 
 def coord(*arg):
@@ -18,9 +17,7 @@ def addImagesToList(amount,tileNum,extrazero=False):
         array.append(pygame.transform.scale(pygame.image.load(name),coord(1,1)))
     return array
 
-
-
-imageList = addImagesToList(15,1,extrazero=True)
+imageList = addImagesToList(17,1,extrazero=True)
 coreImageList = addImagesToList(7,2)
 projectileImageList = addImagesToList(2,3)
 
@@ -39,10 +36,7 @@ projectileImageList = addImagesToList(2,3)
 #5=BackBurner™
 #6=Borr
 #7=Bomb
-
-
-
-
+#8=Missile
 
 #0=broken?
 #1=spin right
@@ -56,8 +50,8 @@ projectileTypes = ["bomb","teleport"]
 global playerTurn
 global spacePressed
 playerTurn = False
-
 spacePressed = True
+
 class Projectile:
     """docstring for Projectile"""
     def __init__(self,x, y,projectile_type,lifespan,dirX=0,dirY=0):
@@ -102,13 +96,12 @@ class Vec: # implementera vektorer istället för x,y och dirX,dirY
         self.y = self.lst[1]
     def __call__(self):
         return self.lst
-
                 
 class Player:
 
     def __init__(self, x=1, y=1, layout=False):
         if(not layout):
-            self.layout=[1]+[random.randint(1,7) for i in range(8)]
+            self.layout=[1]+[random.randint(1,8) for i in range(8)]
         else:
             self.layout = layout
         self.x=x
@@ -161,6 +154,7 @@ class Player:
                     self.x = newx
                     self.y = newy
                     #print("move",dirX,dirY)
+
             if (self.layout[slot] == 3): #GUN
                 #print("shoot")
 
@@ -171,7 +165,6 @@ class Player:
             if (self.layout[slot] == 4): #Teleport
                 if(not isInObject(self.x + self.dirX, self.y + self.dirY)):
                     Projectile(self.x + self.dirX, self.y + self.dirY,"teleport",3,self.dirX,self.dirY)        
-            
 
             if (self.layout[slot] == 5): #BACKBURNER™
                 renewx = self.x - self.dirX
@@ -189,6 +182,10 @@ class Player:
             if (self.layout[slot] == 7): #BOMB
                 if(not isInObject(self.x + self.dirX*2, self.y + self.dirY*2)):
                     Projectile(self.x + self.dirX*2, self.y + self.dirY*2,"bomb",3)
+
+            if (self.layout[slot] == 8): #Missile
+                if(not isInObject(newx, newy)):
+                    Projectile(self.x + self.dirX, self.y + self.dirY,"bomb",1,self.dirX*2,self.dirY*2)
 
 
         else:
@@ -232,16 +229,8 @@ def dirToSlot(dirX,dirY):
 def oppositeSlot(slot):
     return (slot-4-1)%8+1
 
-
-
-
-
-
-
-
 player1=Player(2,1)
 player2=Player(1,2)
-
 
 global gameDisplay
 gameDisplay = pygame.display.set_mode((32*32, 32*18))
@@ -315,7 +304,5 @@ while jump_out == False:
         pygame.display.quit()
         quit()
     pygame.display.update()
-
-
 
 pt.end_program()
