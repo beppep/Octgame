@@ -52,15 +52,34 @@ global spacePressed
 playerTurn = False
 spacePressed = True
 
+class Vec: # implementera vektorer istället för x,y och dirX,dirY
+    def __init__(self,*arg):
+        self.lst = arg
+        if(len(self.lst)>1):
+            self.x = self.lst[0]
+            self.y = self.lst[1]
+
+    def __call__(self):
+        return self.lst
+
+    def __add__(self,other):
+        return Vec(*[self.lst[i]+other.lst[i] for i in range(min(len(self.lst),len(other.lst)))])
+    def __sub__(self, other):
+        return Vec(*[self.lst[i]-other.lst[i] for i in range(min(len(self.lst),len(other.lst)))])
+    def __mul__(self, other):
+        return Vec(*[self.lst[i]*other for i in range(len(self.lst))])
+    def __eq__(self,other):
+        if(self.lst==other.lst):
+            return True
+        else:
+            return False
+
 class Projectile:
-    """docstring for Projectile"""
-    def __init__(self,x, y,projectile_type,lifespan,dirX=0,dirY=0):
+    def __init__(self,pos,projectile_type,lifespan,dirV=Vec(0,0)):
         self.life = lifespan
         self.projectile_type = projectile_type
-        self.x=x
-        self.y=y
-        self.dirX=dirX
-        self.dirY=dirY
+        self.pos=pos
+        self.dirV=dirV
         self.owner=players[playerTurn]
         projectiles.append(self)
         print("Hello, iam aprojectile")
@@ -68,47 +87,35 @@ class Projectile:
 
     def aging(self):
         self.life-=1
-        if(not isInObject(self.x+self.dirX,self.y+self.dirY)):
-            self.x+=self.dirX
-            self.y+=self.dirY
+        if(not isInObject(self.pos+self.dirV)):
+            self.pos=self.pos+self.dirV
         if(not self.life):
             self.explode()
 
     def explode(self):
         if(self.projectile_type=="bomb"):
-            pygame.draw.rect(gameDisplay,(255,100,120),coord(self.x-1,self.y-1,3,3),0)
+            pygame.draw.rect(gameDisplay,(255,100,120),coord(self.pos.x-1,self.pos.y-1,3,3),0)
             for i in range(1,8+1):
-                dirX,dirY = slotToDir(i)
-                newx,newy = [dirX+self.x,dirY+self.y]
+                dirV = slotToDir(i)
+                newPos = self.pos + dirV
                 for player in players:
-                    if(player.x==newx and player.y==newy):
-                        player.hurt(oppositeSlot(dirToSlot(dirX,dirY)))
+                    if(player.pos==newPos):
+                        player.hurt(oppositeSlot(dirToSlot(dirV)))
             projectiles.remove(self)
         if(self.projectile_type=="teleport"):
-            self.owner.x=self.x
-            self.owner.y=self.y
+            self.owner.pos=self.pos
             projectiles.remove(self)
-
-class Vec: # implementera vektorer istället för x,y och dirX,dirY
-    def __init__(self,*arg):
-        self.lst = arg
-        self.x = self.lst[0]
-        self.y = self.lst[1]
-    def __call__(self):
-        return self.lst
                 
-class Player:
+class Player: 
 
-    def __init__(self, x=1, y=1, layout=False):
+    def __init__(self, pos=Vec(1,1), layout=False):
         if(not layout):
             self.layout=[1]+[random.randint(1,8) for i in range(8)]
         else:
             self.layout = layout
-        self.x=x
-        self.y=y
+        self.pos=pos
         
-        self.dirX=0
-        self.dirY=0
+        self.dirV = Vec(0,0)
         
         players.append(self)
 
@@ -136,13 +143,11 @@ class Player:
         #print("Use","playerturn", playerTurn,"slot",slot,"weapon",self.layout[slot])
         #SET DIRECTIONS
         
-        self.dirX,self.dirY=slotToDir(slot)
-        newx = self.x + self.dirX
-        newy = self.y + self.dirY
+        self.dirV=slotToDir(slot)
+        newPos = self.pos + self.dirV
 
         #DO ACTION
-
-        if(not(self.dirX==0 and self.dirY==0)):
+        if(not(self.dirV()==(0,0))):
 
             #DO WEAPON ACTION
             
@@ -150,42 +155,39 @@ class Player:
                 pass
             if (self.layout[slot] == 1): #WHEEL
                 
-                if(newy>=0 and newy<(18/scaleFactor) and newx>=0 and newx<(32/scaleFactor) and not(isInObject(newx,newy))):
-                    self.x = newx
-                    self.y = newy
+                if(newPos.y>=0 and newPos.y<(18/scaleFactor) and newPos.x>=0 and newPos.x<(32/scaleFactor) and not(isInObject(newPos))):
+                    self.pos = newPos
                     #print("move",dirX,dirY)
 
             if (self.layout[slot] == 3): #GUN
                 #print("shoot")
 
-                pygame.draw.line(gameDisplay,(255,100,120),coord(self.x+0.5,self.y+0.5),coord(self.x+self.dirX*32,self.y+self.dirY*32),2)
-                if(math.atan2(-self.dirY,-self.dirX) == math.atan2(self.y-opponent.y,self.x-opponent.x)):
+                pygame.draw.line(gameDisplay,(255,100,120),coord(self.pos.x+0.5,self.pos.y+0.5),coord(self.pos.x+self.dirV.x*32+0.5,self.pos.y+self.dirV.y*32+0.5),2)
+                if(math.atan2(-self.dirV.y,-self.dirV.x) == math.atan2(self.pos.y-opponent.pos.y,self.pos.x-opponent.pos.x)):
                     opponent.hurt(oppositeSlot(slot))
 
             if (self.layout[slot] == 4): #Teleport
-                if(not isInObject(self.x + self.dirX, self.y + self.dirY)):
-                    Projectile(self.x + self.dirX, self.y + self.dirY,"teleport",3,self.dirX,self.dirY)        
+                if(not isInObject(newPos)):
+                    Projectile(newPos,"teleport",3,self.dirV)        
 
             if (self.layout[slot] == 5): #BACKBURNER™
-                renewx = self.x - self.dirX
-                renewy = self.y - self.dirY
-                if(renewy>=0 and renewy<18 and renewx>=0 and renewx<32 and not(isInObject(renewx,renewy))):
-                    self.x = renewx
-                    self.y = renewy
+                reNewPos = self.pos - self.dirV
+                if(reNewPos.y>=0 and reNewPos.y<18 and reNewPos.x>=0 and reNewPos.x<32 and not(isInObject(reNewPos))):
+                    self.pos = reNewPos
 
             if (self.layout[slot] == 6): #MELEE
-                pygame.draw.rect(gameDisplay,(255,100,120),coord(self.x+self.dirX, self.y+self.dirY, 1, 1),0)
-                if(newx==opponent.x and newy==opponent.y):
+                pygame.draw.rect(gameDisplay,(255,100,120),coord(self.pos.x+self.dirV.x, self.pos.y+self.dirV.y, 1, 1),0)
+                if(newPos == opponent.pos):
                     opponent.hurt(oppositeSlot(slot))
                     opponent.hurt(oppositeSlot(slot))
 
             if (self.layout[slot] == 7): #BOMB
-                if(not isInObject(self.x + self.dirX*2, self.y + self.dirY*2)):
-                    Projectile(self.x + self.dirX*2, self.y + self.dirY*2,"bomb",3)
+                if(not isInObject(self.pos+self.dirV*2)):
+                    Projectile(self.pos+self.dirV*2,"bomb",3)
 
             if (self.layout[slot] == 8): #Missile
-                if(not isInObject(newx, newy)):
-                    Projectile(self.x + self.dirX, self.y + self.dirY,"bomb",1,self.dirX*2,self.dirY*2)
+                if(not isInObject(newPos)):
+                    Projectile(newPos,"bomb",1,self.dirV*2)
 
 
         else:
@@ -204,9 +206,9 @@ class Player:
         #time.sleep(1) #updatera screeen innan sleep
         playerTurn = not playerTurn
         
-def isInObject(x,y):
+def isInObject(pos):
     for obj in projectiles+players:
-        if(obj.x==x and obj.y==y):
+        if(obj.pos == pos):
             return True
     return False
 
@@ -219,18 +221,18 @@ def flipList(l):
     return [l.pop(0)] + [l[len(l)-j-4] for j in range(len(l))]
 
 def slotToDir(slot):
-    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)] 
-    return( datas[slot] )
+    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)]
+    return( Vec(*datas[slot]) )
 
-def dirToSlot(dirX,dirY):
-    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)] 
-    return datas.index((dirX,dirY))
+def dirToSlot(dirV):
+    datas = [(0,0),(0,-1),(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1)]
+    return datas.index(dirV())
 
 def oppositeSlot(slot):
     return (slot-4-1)%8+1
 
-player1=Player(2,1)
-player2=Player(1,2)
+player1=Player(Vec(2,1))
+player2=Player(Vec(1,2))
 
 global gameDisplay
 gameDisplay = pygame.display.set_mode((32*32, 32*18))
@@ -269,7 +271,7 @@ while jump_out == False:
 
     #PLAYERS
     for player in players:
-        pos = coord(player.x, player.y)
+        pos = coord(player.pos.x, player.pos.y)
         
         if(playerTurn== players.index(player)):
             gameDisplay.blit(imageList[0],pos) #octagon         
@@ -291,7 +293,7 @@ while jump_out == False:
                 gameDisplay.blit(coreImageList[player.layout[0]],pos)
 
     for projectile in projectiles:
-        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],coord(projectile.x, projectile.y))
+        gameDisplay.blit(projectileImageList[projectileTypes.index(projectile.projectile_type)],coord(projectile.pos.x, projectile.pos.y))
 
 
 
