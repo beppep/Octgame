@@ -19,7 +19,7 @@ def addImagesToList(amount,tileNum,extrazero=False):
 
 imageList = addImagesToList(17,1,extrazero=True)
 coreImageList = addImagesToList(7,2)
-projectileImageList = addImagesToList(2,3)
+projectileImageList = addImagesToList(3,3)
 
 
 
@@ -46,7 +46,7 @@ global players
 global projectile
 players = []
 projectiles = []
-projectileTypes = ["bomb","teleport"]
+projectileTypes = ["bomb","teleport","missile"]
 global playerTurn
 global spacePressed
 playerTurn = False
@@ -94,6 +94,14 @@ class Projectile:
 
     def explode(self):
         if(self.projectile_type=="bomb"):
+            pygame.draw.rect(gameDisplay,(255,100,120),coord(self.pos.x-1,self.pos.y-1,3,3),0)
+            for i in range(1,8+1):
+                dirV = slotToDir(i)
+                newPos = self.pos + dirV
+                for player in players:
+                    if(player.pos==newPos):
+                        player.hurt(oppositeSlot(dirToSlot(dirV)))
+        if(self.projectile_type=="missile"):
             pygame.draw.rect(gameDisplay,(255,100,120),coord(self.pos.x-1,self.pos.y-1,3,3),0)
             for i in range(1,8+1):
                 dirV = slotToDir(i)
@@ -187,7 +195,7 @@ class Player:
 
             if (self.layout[slot] == 8): #Missile
                 if(not isInObject(newPos)):
-                    Projectile(newPos,"bomb",1,self.dirV*2)
+                    Projectile(newPos,"missile",2,self.dirV*2)
 
 
         else:
@@ -246,9 +254,9 @@ while jump_out == False:
     keys = pygame.key.get_pressed()
     for i in range(len(controls)):
 
-    	if(keys[controls[i]] and spacePressed):
-    		#print("slot", i)
-    		players[playerTurn].use(i)
+        if(keys[controls[i]] and spacePressed):
+            #print("slot", i)
+            players[playerTurn].use(i)
     if((not spacePressed) and keys[pygame.K_SPACE]):
         spacePressed = True
         for projectile in projectiles:
@@ -264,9 +272,9 @@ while jump_out == False:
     #GRID
     g_color=50*(spacePressed)+100
     for i in range(33):
-    	pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(i,0),coord(i,18),1)
-    	if(i<19):
-    		pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(0,i),coord(32,i),1)
+        pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(i,0),coord(i,18),1)
+        if(i<19):
+            pygame.draw.line(gameDisplay,(g_color,g_color,g_color),coord(0,i),coord(32,i),1)
 
 
     #PLAYERS
