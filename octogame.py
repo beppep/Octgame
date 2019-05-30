@@ -27,7 +27,6 @@ projectileImageList = addImagesToList(2,3)
 #7 0 3
 #6 5 4
 
-
 #0=Broken
 #1=Wheel
 #2=Shield
@@ -127,6 +126,7 @@ class Player:
             self.die()
         else:
             self.layout[slot] = 0
+
 
     def die(self):
         print("Death")
@@ -251,8 +251,9 @@ while jump_out == False:
     		players[playerTurn].use(i)
     if((not spacePressed) and keys[pygame.K_SPACE]):
         spacePressed = True
-        for projectile in projectiles:
-            projectile.aging()
+        lenOfTheList=len(projectiles)
+        for proj in range(len(projectiles)):
+            projectiles[lenOfTheList-1-proj].aging()
 
 
        		
